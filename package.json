@@ -1,0 +1,15 @@
+{
+	"type": "module",
+	"dependencies": {
+		"@types/culori": "^2.1.0",
+		"culori": "^4.0.1"
+	},
+	"devDependencies": {
+		"typescript": "^5.4.4",
+		"vite": "^5.2.8"
+	},
+	"scripts": {
+		"build": "tsc && vite build",
+		"dev": "vite dev"
+	}
+}
