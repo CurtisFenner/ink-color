@@ -1,6 +1,6 @@
 import * as culori from "culori";
 import { MouseEventLike, UseClickDrag, contrastCSS, useWindowEvent } from "./util";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export type ColorRangeInputProps = {
 	range: { low: number, high: number },
@@ -85,7 +85,8 @@ export function ColorRangeInput(
 }
 
 export type ColorSlidersInput = {
-	initialColor: culori.Oklab,
+	initialColor: culori.Oklch,
+	onChange: (newColor: culori.Oklch) => void,
 };
 
 function makeLinearStops<O extends object>(
@@ -108,11 +109,12 @@ function makeLinearStops<O extends object>(
 export function ColorSlidersInput(
 	props: ColorSlidersInput,
 ) {
-	// Lightness: [0, 1]
-	// Chroma: [0, 0.4]
-	// Hue: [0, 360]
+	const [currentLCH, updateLCHInternal] = useState(culori.oklch(props.initialColor));
 
-	const [currentLCH, updateLCH] = useState(culori.oklch(props.initialColor));
+	const updateLCH = (colorF: (old: culori.Oklch) => culori.Oklch) => {
+		updateLCHInternal(colorF);
+	};
+	useEffect(() => props.onChange(currentLCH), [JSON.stringify(currentLCH)]);
 
 	const clampChromaLow = culori.clampChroma({ ...currentLCH, c: 0 }, "oklch", "rgb");
 	const clampChromaHigh = culori.clampChroma({ ...currentLCH, c: 1 }, "oklch", "rgb");

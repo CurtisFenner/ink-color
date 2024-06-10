@@ -68,3 +68,31 @@ export class UseClickDrag<Q> {
 		this.callback(e, q);
 	}
 }
+
+export function adjustScrolls(element: Element, targetViewY: number): void {
+	let parent = element.parentElement;
+	while (parent) {
+		const y = element.getBoundingClientRect().top;
+		const dy = targetViewY - y;
+		if (Math.round(dy) === 0) {
+			break;
+		}
+
+		parent.scrollTop -= dy;
+		parent = parent.parentElement;
+	}
+}
+
+export function maintainScroll(element: Element) {
+	const beforeTop = element.getBoundingClientRect().top;
+	let stop = false;
+
+	function frame() {
+		adjustScrolls(element, beforeTop);
+		if (!stop) {
+			requestAnimationFrame(frame);
+		}
+	}
+	requestAnimationFrame(frame);
+	setTimeout(() => requestIdleCallback(() => { stop = true; }), 2);
+}
