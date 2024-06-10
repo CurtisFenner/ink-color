@@ -2,7 +2,7 @@ import * as culori from "culori";
 
 import ReactDOM from "react-dom/client";
 import React from "react";
-import { ColorRangeInput, ColorSlidersInput } from "./swatch";
+import { ColorRangeInput, ColorSlidersInput } from "./color-range";
 import { contrastCSS } from "./util";
 
 const oklab = culori.converter("oklab");
