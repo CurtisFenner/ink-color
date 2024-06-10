@@ -1,4 +1,43 @@
+:root {
+	--color-light: #EEE;
+	--color-dark: #111;
+}
+
 body {
 	max-width: 9in;
 	margin: 0 auto;
+	padding: 1rem;
+	background: var(--color-light);
+	font-family: sans-serif;
+	font-size: 16px;
+}
+
+.round-slight {
+	border-radius: 2px;
+}
+
+.outline-contrast {
+	outline: 1px solid var(--color-contrast);
+}
+
+.outline-dark {
+	outline: 1px solid var(--color-dark);
+}
+
+.shadow {
+	box-shadow: 0 0.125rem 0.5rem -0.25rem rgba(0, 0, 0, 0.5);
+}
+
+.color-range-input {
+	position: relative;
+	display: block;
+	height: 2rem;
+}
+
+.color-range-input .handle {
+	position: absolute;
+	width: 1rem;
+	height: calc(100% + 6px);
+	top: -3px;
+	transform: translate(-50%, 0);
 }
