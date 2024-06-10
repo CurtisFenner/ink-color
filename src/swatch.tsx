@@ -4,10 +4,12 @@ import { useCallback, useState } from "react";
 
 export type ColorRangeInputProps = {
 	range: { low: number, high: number },
+	invalidRanges?: { low: number, high: number }[],
 	colorF: (value: number) => culori.Color,
 	value: number,
 	changeValue: (newValue: number) => void,
 	classNames?: string[],
+	clampMode?: "clamp" | "wrap",
 };
 
 export function ColorRangeInput(
@@ -16,16 +18,20 @@ export function ColorRangeInput(
 	const valueToProportion = (x: number) => (x - props.range.low) / (props.range.high - props.range.low);
 
 	const updateFromDx = useCallback((e: MouseEventLike, base: HTMLElement) => {
+		const rangeSize = props.range.high - props.range.low;
 		const dx = e.clientX - base.getBoundingClientRect().left;
 		const dp = dx / base.clientWidth;
-		const newValue = dp * (props.range.high - props.range.low) + props.range.low;
-		const clamped = Math.max(props.range.low, Math.min(newValue, props.range.high));
-		props.changeValue(clamped);
+		const newValue = dp * rangeSize + props.range.low;
+		const fromLow = newValue - props.range.low;
+		const clampedFromLow = props.clampMode === "wrap"
+			? ((fromLow % rangeSize) + rangeSize) % rangeSize
+			: Math.max(0, Math.min(fromLow, rangeSize));
+		props.changeValue(clampedFromLow + props.range.low);
 	}, [props.changeValue]);
 
 	const useClickDrag = new UseClickDrag<HTMLElement>(updateFromDx);
 
-	const colorStops = makeLinearStops(props.range, 32, e => ({ color: props.colorF(e) }));
+	const colorStops = makeLinearStops(props.range, 16, e => ({ color: props.colorF(e) }));
 
 	const gradientStops = colorStops.map(stop => {
 		return culori.formatCss(stop.color) + " " + (valueToProportion(stop.value) * 100).toFixed(1) + "%";
@@ -42,6 +48,31 @@ export function ColorRangeInput(
 			style={{
 				background,
 			}}>
+			{
+				(props.invalidRanges || [])
+					.filter(range => range.low < props.range.high && range.high > props.range.low && range.low < range.high)
+					.map(range => ({ low: Math.max(props.range.low, range.low), high: Math.min(props.range.high, range.high) }))
+					.map((invalidRange, i) => {
+						return <div key={i} className="outline-contrast" style={{
+							"--color-contrast": contrastCSS(props.colorF(props.value)),
+							position: "absolute",
+							opacity: 0.75,
+							top: 0,
+							height: "100%",
+							left: (valueToProportion(invalidRange.low) * 100).toFixed(1) + "%",
+							right: (100 - valueToProportion(invalidRange.high) * 100).toFixed(1) + "%",
+						}}>
+							<div className="background-hatch" style={{
+								position: "absolute",
+								background: "var(--color-contrast)",
+								top: 0,
+								left: 0,
+								right: 0,
+								bottom: 0,
+							}}></div>
+						</div>
+					})
+			}
 			<div
 				style={{
 					background: culori.formatCss(props.colorF(props.value)),
@@ -83,6 +114,9 @@ export function ColorSlidersInput(
 
 	const [currentLCH, updateLCH] = useState(culori.oklch(props.initialColor));
 
+	const clampChromaLow = culori.clampChroma({ ...currentLCH, c: 0 }, "oklch", "rgb");
+	const clampChromaHigh = culori.clampChroma({ ...currentLCH, c: 1 }, "oklch", "rgb");
+
 	return <>
 		<ColorRangeInput
 			classNames={["outline-dark", "shadow"]}
@@ -110,7 +144,11 @@ export function ColorSlidersInput(
 					c,
 					h: currentLCH.h,
 				};
-			}} />
+			}}
+			invalidRanges={[
+				{ low: 0, high: clampChromaLow.c },
+				{ low: clampChromaHigh.c, high: 1 },
+			]} />
 		<br />
 		<ColorRangeInput
 			classNames={["outline-dark", "shadow"]}
@@ -124,6 +162,7 @@ export function ColorSlidersInput(
 					c: currentLCH.c,
 					h,
 				};
-			}} />
+			}}
+			clampMode="wrap" />
 	</>
 }

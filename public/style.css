@@ -41,3 +41,9 @@ body {
 	top: -3px;
 	transform: translate(-50%, 0);
 }
+
+.background-hatch {
+	mask-image: url("/hatch-m2-8p.svg");
+	mask-repeat: repeat repeat;
+	mask-size: 16px;
+}
