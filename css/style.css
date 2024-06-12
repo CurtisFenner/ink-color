@@ -43,7 +43,7 @@ body {
 }
 
 .background-hatch {
-	mask-image: url("/hatch-m2-8p.svg");
+	mask-image: url("/resource/hatch-m2-8p.svg");
 	mask-repeat: repeat repeat;
 	mask-size: 16px;
 }
