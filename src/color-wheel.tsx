@@ -3,6 +3,8 @@ import * as culori from "culori";
 import ReactDOM from "react-dom/client";
 import React, { useState } from "react";
 import { ColorRangeInput } from "./color-range";
+import { SwatchButtonRow } from "./components/swatch";
+import { binarySearchNearest, hueDistance } from "./util";
 
 const oklchSpectrum: culori.Oklch[] = [];
 const spectrumResolution = 16;
@@ -58,7 +60,6 @@ function oklchFromHue(hue: number): culori.Oklch {
 
 function hslFromHue(hue: number): culori.Hsl {
 	hue = ((hue % 360) + 360) % 360;
-
 	const ip = hslSpectrum.length * hue / 360;
 	const i0 = Math.floor(ip);
 	const i1 = (i0 + 1) % hslSpectrum.length;
@@ -109,8 +110,117 @@ function HueSelectors() {
 	</>
 }
 
+function impreciseFormatOklch(color: culori.Color) {
+	const oklch = culori.oklch(color);
+	return `oklch(${(oklch.l * 100).toFixed(1)}% ${oklch.c.toFixed(3)} ${(oklch.h || 0).toFixed(1)})`;
+}
+
+function setOklchHue(c: culori.Color, hue: number): culori.Color {
+	const input = culori.oklch(c);
+	const shifted: culori.Oklch = {
+		mode: "oklch",
+		l: input.l,
+		c: input.c,
+		h: ((hue % 360) + 360) % 360,
+	};
+	return culori.clampChroma(shifted, "oklch", "rgb");
+}
+
+function setHslNonHue(c: culori.Color, match: culori.Hsl): culori.Hsl {
+	const hsl = culori.hsi(c);
+	return {
+		mode: "hsl",
+		h: hsl.h,
+		s: match.s,
+		l: match.l,
+	};
+}
+
+function Triad() {
+	const [hslHue, hslHueSet] = useState(0);
+
+	const angles = [180, 0, 120, 240];
+
+	const hslTriad: culori.Hsl[] = angles.map(angle => {
+		return { mode: "hsl", h: hslHue + angle, s: 0.8, l: 0.5 }
+	});
+
+	const oklchHue = culori.oklch(hslTriad[angles.indexOf(0)]).h!;
+
+	const oklchTriad: culori.Color[] = hslTriad.map((color, i) => {
+		const bestHue = binarySearchNearest(
+			hslHue + angles[i],
+			h => {
+				const hsl: culori.Hsl = {
+					mode: "hsl",
+					h,
+					s: color.s,
+					l: color.l,
+				};
+				const targetHue = oklchHue + angles[i];
+				return hueDistance(culori.oklch(hsl).h!, targetHue);
+			},
+		);
+		return {
+			mode: "hsl",
+			h: bestHue,
+			s: color.s,
+			l: color.l,
+		};;
+	});
+
+	const buttonContent = (color: culori.Color, i: number) => {
+		const oklchHueDifference =
+			(360 + culori.oklch(color).h! - oklchHue) % 360;
+		return <div style={{ fontSize: "80%", lineHeight: "120%" }}>
+			{culori.formatHex(color)}<br />
+			{culori.formatHsl(color)}<br />
+			{impreciseFormatOklch(color)}<br />
+			<br />
+			<br />
+			+{oklchHueDifference.toFixed(1)}&deg; in OKLCH
+		</div>
+	};
+
+	return <div className="section">
+		<b>HSL Hue:</b> {hslHue.toFixed(1)}&deg;<br /><br />
+		<ColorRangeInput range={{ low: 0, high: 360 }}
+			colorF={function (value: number): culori.Color {
+				return {
+					mode: "hsl",
+					h: value,
+					s: 0.8,
+					l: 0.5,
+				};
+			}}
+			value={hslHue}
+			changeValue={function (newValue: number): void {
+				hslHueSet(newValue);
+			}}
+			clampMode="wrap" />
+		<br />
+		<b>Simple HSL Complementary + Triad:</b>
+		<SwatchButtonRow
+			elements={hslTriad.map(color => ({ color, flexBasis: 1 }))}
+			aspectRatio={0.5}
+			onClick={() => { }}
+			buttonContent={buttonContent}
+		/>
+		<br />
+		<b>Adjusted Complementary + Triad using OKLCH Hues:</b>
+		<SwatchButtonRow
+			elements={oklchTriad.map(color => ({ color, flexBasis: 1 }))}
+			aspectRatio={0.5}
+			onClick={() => { }}
+			buttonContent={buttonContent}
+		/>
+	</div>;
+}
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
 	<React.StrictMode>
 		<HueSelectors />
+		<br />
+		<Triad />
 	</React.StrictMode>
 );

@@ -1,6 +1,6 @@
 import * as culori from "culori";
 import { contrastCSS } from "../util";
-import { useCallback } from "react";
+import React, { useCallback } from "react";
 
 export type SwatchButtonProps = {
 	color: culori.Color,
@@ -8,10 +8,11 @@ export type SwatchButtonProps = {
 	aspectRatio: number,
 	onClick: () => void,
 	highlight?: boolean,
+	children?: React.ReactNode,
 };
 
 export function SwatchButton(props: SwatchButtonProps) {
-	return <button className={
+	return <div tabIndex={0} className={
 		["round-slight outline-dark shadow"]
 			.concat(["highlighted"].filter(_ => props.highlight))
 			.join(" ")
@@ -32,8 +33,8 @@ export function SwatchButton(props: SwatchButtonProps) {
 			color: "var(--color-contrast)",
 			aspectRatio: 1 / (props.aspectRatio / props.flexBasis),
 		}}>
-		{culori.formatHex(props.color)}
-	</button>
+		{props.children}
+	</div>
 }
 
 export type SwatchButtonRowProps = {
@@ -41,7 +42,12 @@ export type SwatchButtonRowProps = {
 	aspectRatio: number,
 	onClick: (i: number, element: { color: culori.Color, flexBasis: number }) => void,
 	highlighting?: Set<number>,
+	buttonContent?: (color: culori.Color, i: number) => React.ReactNode,
 };
+
+export function defaultButtonContent(color: culori.Color): React.ReactNode {
+	return culori.formatHex(color);
+}
 
 export function SwatchButtonRow(props: SwatchButtonRowProps) {
 	return <div
@@ -58,7 +64,9 @@ export function SwatchButtonRow(props: SwatchButtonRowProps) {
 					color={element.color}
 					flexBasis={element.flexBasis}
 					aspectRatio={props.aspectRatio}
-					highlight={props.highlighting?.has(i)} />
+					highlight={props.highlighting?.has(i)}>
+					{(props.buttonContent || defaultButtonContent)(element.color, i)}
+				</SwatchButton>
 			})
 		}
 	</div>;

@@ -96,3 +96,32 @@ export function maintainScroll(element: Element) {
 	requestAnimationFrame(frame);
 	setTimeout(() => requestIdleCallback(() => { stop = true; }), 2);
 }
+
+export function hueDistance(a: number, b: number) {
+	const delta = (((b - a) % 360) + 360) % 360
+	return Math.min(
+		Math.abs(delta),
+		Math.abs(delta - 360),
+	)
+}
+
+export function binarySearchNearest(
+	initial: number,
+	error: (x: number) => number,
+	size: number = 360,
+	epsilon = 1e-6,
+): number {
+	let x = initial;
+	let jump = size;
+	while (jump > epsilon) {
+		for (const guess of [x - jump, x + jump]) {
+			const e = error(guess);
+			if (e < error(x)) {
+				x = guess;
+			}
+		}
+
+		jump /= 2;
+	}
+	return x;
+}
