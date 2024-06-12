@@ -48,7 +48,7 @@ export function SwatchButtonRow(props: SwatchButtonRowProps) {
 		style={{
 			display: "flex",
 			justifyContent: "space-between",
-			gap: "1rem",
+			gap: "0.5rem",
 		}}>
 		{
 			props.elements.map((element, i) => {

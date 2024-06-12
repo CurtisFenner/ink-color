@@ -44,10 +44,6 @@ export function Editor(props: EditorProps) {
 		if (x === null) {
 			return;
 		}
-		const ro = new ResizeObserver((a, b) => {
-			console.log("ResizeObserver:", a, b);
-		});
-		ro.observe(x, {});
 	}, [containerRef.current]);
 
 	const appendHistoryIfFresh = (colors: culori.Oklch[], changedIndex: number | null) => {
@@ -118,7 +114,7 @@ export function Editor(props: EditorProps) {
 					aspectRatio={0.25}
 					onClick={() => { }}
 				/>
-				<br />
+				<div className="gap-thin"></div>
 			</Fragment>)
 		}
 		<SwatchButtonRow

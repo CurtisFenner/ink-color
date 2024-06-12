@@ -16,19 +16,50 @@ const initialColors = [
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
 	<React.StrictMode>
-		<h1>Big</h1>
-		<h1>Big2</h1>
-		<h1>Big3</h1>
-		<h1>Big4</h1>
-		<h1>Big5</h1>
-		<h1>Big6</h1>
-		<h1>Big7</h1>
-		<h1>Big8</h1>
-		<h1>Big9</h1>
-		<h1>Big10</h1>
-		<h1>Big11</h1>
-		Hello!
+		<div className="shadow round-slight" style={{
+			aspectRatio: 16 / 9,
+			background: "var(--color-dark)",
+		}}></div>
 		<br />
 		<Editor initialColors={initialColors} />
 	</React.StrictMode>
 );
+
+function getDropEventFile(e: DragEvent): DataTransferItem | undefined {
+	return [...e.dataTransfer?.items || []].filter(x => x.kind === "file")[0];
+}
+
+let dragDepth = 0;
+window.addEventListener("drop", e => {
+	dragDepth = Math.max(0, dragDepth - 1);
+	if (dragDepth <= 0) {
+		document.body.classList.remove("dropping");
+	}
+
+	if (getDropEventFile(e)) {
+		e.preventDefault();
+	}
+});
+
+window.addEventListener("dragenter", e => {
+	if (getDropEventFile(e)) {
+		dragDepth += 1;
+		document.body.classList.add("dropping");
+	}
+});
+
+window.addEventListener("dragleave", e => {
+	if (getDropEventFile(e)) {
+		dragDepth = Math.max(0, dragDepth - 1);
+		if (dragDepth <= 0) {
+			document.body.classList.remove("dropping");
+		}
+	}
+});
+
+window.addEventListener("dragover", e => {
+	if (getDropEventFile(e)) {
+		// Allow drop events to be collected.
+		e.preventDefault();
+	}
+});

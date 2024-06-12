@@ -51,4 +51,20 @@ body {
 .highlighted {
 	box-shadow: 0 0 0.25rem 0.5rem white;
 	outline-width: 0.25rem;
+	z-index: 100;
+}
+
+.dropping {
+	filter: blur(1rem);
+}
+
+.gap-thin {
+	width: 100%;
+	display: block;
+	height: 0.5rem;
+}
+
+.section {
+	background: #8884;
+	padding: 1rem;
 }

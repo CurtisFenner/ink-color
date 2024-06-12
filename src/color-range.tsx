@@ -17,26 +17,41 @@ export function ColorRangeInput(
 ) {
 	const valueToProportion = (x: number) => (x - props.range.low) / (props.range.high - props.range.low);
 
+	const wrapIfWrap = (x: number) => {
+		if (props.clampMode !== "wrap") {
+			return x;
+		}
+		const rangeSize = props.range.high - props.range.low;
+		const fromLow = x - props.range.low;
+		return props.range.low + (((fromLow % rangeSize) + rangeSize) % rangeSize);
+	};
+
 	const updateFromDx = useCallback((e: MouseEventLike, base: HTMLElement) => {
 		const rangeSize = props.range.high - props.range.low;
 		const dx = e.clientX - base.getBoundingClientRect().left;
 		const dp = dx / base.clientWidth;
 		const newValue = dp * rangeSize + props.range.low;
 		const fromLow = newValue - props.range.low;
-		const clampedFromLow = props.clampMode === "wrap"
-			? ((fromLow % rangeSize) + rangeSize) % rangeSize
-			: Math.max(0, Math.min(fromLow, rangeSize));
-		props.changeValue(clampedFromLow + props.range.low);
+
+		const finished = props.clampMode === "wrap"
+			? wrapIfWrap(newValue)
+			: Math.max(0, Math.min(fromLow, rangeSize)) + props.range.low;
+		props.changeValue(finished);
 	}, [props.changeValue]);
 
 	const useClickDrag = new UseClickDrag<HTMLElement>(updateFromDx);
 
-	const colorStops = makeLinearStops(props.range, 16, e => ({ color: props.colorF(e) }));
+	const colorStops = makeLinearStops(props.range, 36, e => ({ color: props.colorF(e) }));
 
 	const gradientStops = colorStops.map(stop => {
-		return culori.formatCss(stop.color) + " " + (valueToProportion(stop.value) * 100).toFixed(1) + "%";
+		return culori.formatHex(stop.color) + " " + (valueToProportion(stop.value) * 100).toFixed(1) + "%";
 	});
 	const background = `linear-gradient(to right in oklab, ${gradientStops.join(", ")})`;
+
+	const wrappedValue = props.clampMode === "wrap"
+		? wrapIfWrap(props.value)
+		: props.value;
+
 	return <>
 		<div
 			tabIndex={0}
@@ -54,7 +69,7 @@ export function ColorRangeInput(
 					.map(range => ({ low: Math.max(props.range.low, range.low), high: Math.min(props.range.high, range.high) }))
 					.map((invalidRange, i) => {
 						return <div key={i} className="outline-contrast" style={{
-							"--color-contrast": contrastCSS(props.colorF(props.value)),
+							"--color-contrast": contrastCSS(props.colorF(wrappedValue)),
 							position: "absolute",
 							opacity: 0.75,
 							top: 0,
@@ -75,9 +90,9 @@ export function ColorRangeInput(
 			}
 			<div
 				style={{
-					background: culori.formatCss(props.colorF(props.value)),
-					"--color-contrast": contrastCSS(props.colorF(props.value)),
-					left: (valueToProportion(props.value) * 100).toFixed(3) + "%",
+					background: culori.formatHex(props.colorF(wrappedValue)),
+					"--color-contrast": contrastCSS(props.colorF(wrappedValue)),
+					left: (valueToProportion(wrappedValue) * 100).toFixed(3) + "%",
 				}}
 				className="handle outline-contrast round-slight shadow"></div>
 		</div>
