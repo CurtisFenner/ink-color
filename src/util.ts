@@ -125,3 +125,28 @@ export function binarySearchNearest(
 	}
 	return x;
 }
+
+export function mod(a: number, b: number) {
+	return ((a % b) + b) % b;
+}
+
+export function distributeIntegers(
+	distribute: number,
+	weights: number[],
+) {
+	let total = 0;
+	for (const w of weights) {
+		total += w;
+	}
+
+	distribute -= weights.length;
+	const out = [];
+	for (const w of weights) {
+		const p = w / total;
+		const m = Math.round(distribute * p);
+		out.push(m + 1);
+		distribute -= m;
+		total -= w;
+	}
+	return out;
+}

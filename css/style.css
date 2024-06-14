@@ -54,8 +54,24 @@ body {
 	z-index: 100;
 }
 
-.dropping {
-	filter: blur(1rem);
+.dropping::after {
+	background: rgba(255, 255, 255, 0.5);
+	backdrop-filter: blur(1rem);
+	color: var(--color-dark);
+	text-align: center;
+	font-size: 5rem;
+	content: "Drop an image";
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 100000;
+	pointer-events: none;
+	user-select: none;
 }
 
 .gap-thin {
