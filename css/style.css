@@ -84,3 +84,14 @@ body {
 	background: #8884;
 	padding: 1rem;
 }
+
+hr {
+	border: none;
+	outline: none;
+	height: 1.5rem;
+	background-image: url(/resource/halftone-bar.png);
+	background-size: auto 0.75rem;
+	background-position-y: 0.375rem;
+	background-repeat: repeat no-repeat;
+	opacity: 0.5;
+}

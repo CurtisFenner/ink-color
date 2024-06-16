@@ -7,7 +7,7 @@ export type ColorRangeInputProps = {
 	invalidRanges?: { low: number, high: number }[],
 	colorF: (value: number) => culori.Color,
 	value: number,
-	changeValue: (newValue: number) => void,
+	changeValue: (newValue: number, newColor: culori.Color) => void,
 	classNames?: string[],
 	clampMode?: "clamp" | "wrap",
 };
@@ -36,7 +36,7 @@ export function ColorRangeInput(
 		const finished = props.clampMode === "wrap"
 			? wrapIfWrap(newValue)
 			: Math.max(0, Math.min(fromLow, rangeSize)) + props.range.low;
-		props.changeValue(finished);
+		props.changeValue(finished, props.colorF(finished));
 	}, [props.changeValue]);
 
 	const useClickDrag = new UseClickDrag<HTMLElement>(updateFromDx);

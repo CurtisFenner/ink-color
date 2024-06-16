@@ -98,7 +98,7 @@ export function maintainScroll(element: Element) {
 }
 
 export function hueDistance(a: number, b: number) {
-	const delta = (((b - a) % 360) + 360) % 360
+	const delta = mod(b - a, 360);
 	return Math.min(
 		Math.abs(delta),
 		Math.abs(delta - 360),
@@ -149,4 +149,18 @@ export function distributeIntegers(
 		total -= w;
 	}
 	return out;
+}
+
+export type Chromatic = culori.Color & { h: number };
+
+export function wrappingInterpolate(array: number[], wrapAt: number): (degrees: number) => number {
+	const samples = [...array, array[0] + wrapAt];
+	const wedge = wrapAt / (samples.length - 1);
+	return (degrees: number) => {
+		degrees = mod(degrees, wrapAt);
+		const i0 = Math.floor(degrees / wedge);
+		const i1 = i0 + 1;
+		const p = (degrees - i0 * wedge) / wedge;
+		return mod(samples[i0] * (1 - p) + p * samples[i1], wrapAt);
+	};
 }
