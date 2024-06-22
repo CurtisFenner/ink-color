@@ -26,10 +26,17 @@ export function ColorRangeInput(
 		return props.range.low + (((fromLow % rangeSize) + rangeSize) % rangeSize);
 	};
 
-	const updateFromDx = useCallback((e: MouseEventLike, base: HTMLElement) => {
+	const updateFromDx = useCallback((e: MouseEventLike, { bar, handle, handleGrabP }: { bar: HTMLElement, handle: HTMLElement | false, handleGrabP: number }) => {
 		const rangeSize = props.range.high - props.range.low;
-		const dx = e.clientX - base.getBoundingClientRect().left;
-		const dp = dx / base.clientWidth;
+		let mx = e.clientX;
+		if (handle) {
+			const handleWidth = handle.clientWidth;
+			const grabbingOnHandle = handleGrabP * handleWidth;
+			mx += handleWidth / 2 - grabbingOnHandle;
+		}
+
+		const dx = mx - bar.getBoundingClientRect().left;
+		const dp = dx / bar.clientWidth;
 		const newValue = dp * rangeSize + props.range.low;
 		const fromLow = newValue - props.range.low;
 
@@ -39,7 +46,11 @@ export function ColorRangeInput(
 		props.changeValue(finished, props.colorF(finished));
 	}, [props.changeValue]);
 
-	const useClickDrag = new UseClickDrag<HTMLElement>(updateFromDx);
+	const useClickDrag = new UseClickDrag<{
+		bar: HTMLElement,
+		handle: HTMLElement | false,
+		handleGrabP: number,
+	}>(updateFromDx);
 
 	const colorStops = makeLinearStops(props.range, 36, e => ({ color: props.colorF(e) }));
 
@@ -56,7 +67,25 @@ export function ColorRangeInput(
 		<div
 			tabIndex={0}
 			onMouseDown={e => {
-				useClickDrag.startClick(e, e.currentTarget);
+				const handle = e.target
+					&& e.target instanceof HTMLElement
+					&& e.target.classList.contains("handle")
+					&& e.target;
+
+				if (handle) {
+					const handleViewport = handle.getBoundingClientRect();
+					useClickDrag.startClick(e, {
+						bar: e.currentTarget,
+						handle,
+						handleGrabP: (e.clientX - handleViewport.left) / handleViewport.width,
+					});
+				} else {
+					useClickDrag.startClick(e, {
+						bar: e.currentTarget,
+						handle: false,
+						handleGrabP: 0.5,
+					});
+				}
 				e.preventDefault();
 			}}
 			className={["color-range-input", ...(props.classNames || [])].join(" ")}

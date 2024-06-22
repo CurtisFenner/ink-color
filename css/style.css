@@ -32,13 +32,14 @@ body {
 	position: relative;
 	display: block;
 	height: 2rem;
+	--handle-overhang: 4px;
 }
 
 .color-range-input .handle {
 	position: absolute;
 	width: 1rem;
-	height: calc(100% + 6px);
-	top: -3px;
+	height: calc(100% + var(--handle-overhang) * 2);
+	top: calc(-1 * var(--handle-overhang));
 	transform: translate(-50%, 0);
 }
 
