@@ -5,7 +5,7 @@ import { CSSProperties, useCallback, useEffect, useReducer, useRef, useState } f
 export type SpectrumAnalysis = {
 	hues: {
 		hue: number,
-		lightnessDistribution: { lightness: number, weight: number }[],
+		lightnessDistribution: { lightness: number, weight: number, chromas: number[] }[],
 		weight: number,
 	}[],
 };
@@ -27,7 +27,7 @@ export function analyzeSpectrum(imageData: ImageData, strength = 1): SpectrumAna
 		colors.push(color);
 	}
 
-	const HUE_BUCKET_COUNT = 18;
+	const HUE_BUCKET_COUNT = 36;
 	const HUE_BUCKET_SIZE = 360 / HUE_BUCKET_COUNT;
 
 	const LIGHTNESS_BUCKET_COUNT = 7;
@@ -71,6 +71,7 @@ export function analyzeSpectrum(imageData: ImageData, strength = 1): SpectrumAna
 		for (const [lightness, bucket] of byLightness.buckets) {
 			lightnessDistribution.push({
 				lightness,
+				chromas: bucket.elements.map(x => culori.oklch(x.value).c).sort((a, b) => a - b),
 				weight: bucket.totalWeight / byLightness.totalWeight,
 			});
 		}
@@ -189,6 +190,10 @@ export function SpectrumRender(props: {}) {
 
 		ctx.translate(1, 0);
 
+		const middleElement = (array: number[]): number => {
+			return array[Math.floor(array.length / 2)];
+		};
+
 		analysis.hues.forEach((hueBucket, i) => {
 			const width = widths[i];
 			const heights = distributeIntegers(canvas.height - hueBucket.lightnessDistribution.length - 1, hueBucket.lightnessDistribution.map(x => x.weight));
@@ -198,7 +203,7 @@ export function SpectrumRender(props: {}) {
 				const color: culori.Oklch = culori.clampChroma({
 					mode: "oklch",
 					h: hueBucket.hue,
-					c: 0.4,
+					c: middleElement(lightness.chromas),
 					l: lightness.lightness,
 				}, "oklch", "rgb");
 
@@ -217,7 +222,7 @@ export function SpectrumRender(props: {}) {
 	return <div>
 		<div className="shadow round-slight" style={{
 			position: "relative",
-			aspectRatio: 16 / 9,
+			aspectRatio: 64 / 9,
 			background: "var(--color-dark)",
 		}}>
 			<Canvas
