@@ -6,61 +6,59 @@ import { SwatchButtonRow } from "./components/swatch";
 import { ColorChip } from "./components/color-chip";
 
 function generateChromaDiscrepancies(): {
-	error: number;
-	a: culori.Hsl,
-	b: culori.Hsl,
+	chromaErrorRatio: number;
+	a: culori.Color,
+	b: culori.Color,
 }[] {
-	const colors = [];
-	for (let saturation = 20; saturation < 100; saturation += 30) {
-		for (let h = 0; h < 360; h += 30) {
-			const hsl: culori.Hsl = {
-				mode: "hsl",
-				h,
-				s: saturation / 100,
-				l: 0.5,
-			}
-			const oklch = culori.oklch(hsl);
-			colors.push({ hsl, oklch });
-		}
-	}
-
 	const pairs = [];
-	for (let i = 0; i < colors.length; i++) {
-		for (let j = 0; j < i; j++) {
-			const a = colors[i];
-			const b = colors[j];
 
-			const hslRatio = b.hsl.s / a.hsl.s;
-			const oklchRatio = b.oklch.c / a.oklch.c;
-			const error = hslRatio - oklchRatio;
-			pairs.push({
-				error,
-				a: a.hsl,
-				b: b.hsl,
-			});
+	for (const chroma of [0.15, 0.18, 0.22]) {
+		for (const lightness of [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]) {
+			const spectrum = [];
+			for (let hue = 15; hue < 360; hue += 30) {
+				const oklch: culori.Oklch = {
+					mode: "oklch",
+					c: chroma,
+					l: lightness,
+					h: hue,
+				};
+				if (culori.displayable(oklch)) {
+					spectrum.push(oklch);
+				}
+			}
+
+			for (let i = 0; i < spectrum.length; i++) {
+				for (let j = 0; j < i; j++) {
+					const a = spectrum[i];
+					const b = spectrum[j];
+					const hslRatio = culori.hsl(a).s / culori.hsl(b).s;
+					pairs.push({
+						chromaErrorRatio: hslRatio - 1,
+						a,
+						b,
+					});
+				}
+			}
 		}
 	}
 
-	pairs.sort((a, b) => Math.abs(b.error) - Math.abs(a.error));
+	pairs.sort((a, b) => Math.abs(b.chromaErrorRatio) - Math.abs(a.chromaErrorRatio));
 	return pairs;
 }
 
 const lessMoreSame = (a: number, b: number, ful: string): React.ReactNode => {
-	const percent = (b / a - 1) * 100;
+	const percent = (a / b - 1) * 100;
 	if (Math.abs(percent) < 0.5) {
 		return <>
-			<b>exactly as {ful} as</b>
+			<b>exactly as</b> {ful} as
 		</>;
 	} else if (Math.abs(percent) < 10) {
 		return <>
-			<b>about as</b> {ful} ({Math.abs(percent).toFixed(0)}
-			% {percent < 0 ? "more" : "less"} than)
+			<b>about as</b> {ful} ({(a / b).toFixed(2)}x)
 		</>;
 	}
 	return <>
-		<b>
-			{Math.abs(percent).toFixed(0)}% {percent < 0 ? "more" : "less"}
-		</b> {ful} than
+		<b>{(a / b).toFixed(1)}x</b> as {ful} as
 	</>
 };
 
